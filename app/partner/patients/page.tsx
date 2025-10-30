@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import Table from '@/components/table/page';
 import Modal from '@/components/modal/page';
 import CreatePatient from '@/components/partner/create-patient/page';
@@ -11,68 +11,48 @@ import { RootState, AppDispatch } from "@/redux/store";
 import { startLoading, stopLoading } from "@/redux/slice/loadingSlice";
 import { useRouter } from "next/navigation";
 
-
 const PatientSchedule = () => {
   const [open, setOpen] = useState(false);
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
+
   const allPartnerPatient = useSelector((state: RootState) =>
     Array.isArray(state.hqPatient.allPartnerPatient)
       ? state.hqPatient.allPartnerPatient
       : []
   );
 
-  // fetch patients list
-  useEffect(() => {
-    const fetchPartners = async () => {
-      try {
-        dispatch(startLoading());
-        await dispatch(getAllHqPatient()).unwrap();
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        dispatch(stopLoading());
-      }
-    };
-
-    fetchPartners();
+  // ✅ Define fetchPartners outside the useEffect and memoize it
+  const fetchPartners = useCallback(async () => {
+    try {
+      dispatch(startLoading());
+      await dispatch(getAllHqPatient()).unwrap();
+    } catch (error: any) {
+      toast.error(error?.message || "Failed to fetch patients");
+    } finally {
+      dispatch(stopLoading());
+    }
   }, [dispatch]);
 
-  // Navigate to individual patient page
+  // ✅ Call fetchPartners on mount
+  useEffect(() => {
+    fetchPartners();
+  }, [fetchPartners]);
+
   const handleOpenDetails = (row: any) => {
     router.push(`/partner/patients/${row.uuid}`);
   };
 
-  // Toggle modal for CreatePatient
-  const handleModal = () => {
-    setOpen((prev) => !prev);
-  };
+  const handleModal = () => setOpen((prev) => !prev);
 
-  // helper to capitalize first letter
   const capitalize = (str: string) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "N/A";
 
   const columns = [
-    {
-      key: "id",
-      label: "ID",
-      render: (row: any) => row.id,
-    },
-    {
-      key: "name",
-      label: "Patient Name",
-      render: (row: any) => capitalize(row.name),
-    },
-    {
-      key: "phone",
-      label: "Phone Number",
-      render: (row: any) => row.phone || "N/A",
-    },
-    {
-      key: "email",
-      label: "Email Address",
-      render: (row: any) => row.email?.toLowerCase() || "N/A",
-    },
+    { key: "id", label: "ID", render: (row: any) => row.id },
+    { key: "name", label: "Patient Name", render: (row: any) => capitalize(row.name) },
+    { key: "phone", label: "Phone Number", render: (row: any) => row.phone || "N/A" },
+    { key: "email", label: "Email Address", render: (row: any) => row.email?.toLowerCase() || "N/A" },
     {
       key: "mobile_app_patient",
       label: "Mobile App",
@@ -112,13 +92,12 @@ const PatientSchedule = () => {
       <Table
         columns={columns}
         data={allPartnerPatient}
-        handleView={(row) => handleOpenDetails(row)}
+        handleView={handleOpenDetails}
       />
 
-      {/* Modal only for creating patient */}
       {open && (
         <Modal onClose={handleModal} visible={open}>
-          <CreatePatient close={handleModal} />
+          <CreatePatient close={handleModal} refresh={fetchPartners} />
         </Modal>
       )}
     </section>

@@ -14,6 +14,7 @@ import 'react-phone-input-2/lib/style.css';
 
 type CreatePatientProps = {
   close: () => void;
+  refresh: () => void;
 };
 
 interface FormState {
@@ -23,7 +24,7 @@ interface FormState {
   country_code: string;
 }
 
-const CreatePatient: React.FC<CreatePatientProps> = ({ close }) => {
+const CreatePatient: React.FC<CreatePatientProps> = ({ close, refresh }) => {
   const dispatch = useDispatch<any>();
   const isLoading = useSelector((state: RootState) => state.loading.isLoading);
   const [dragActive, setDragActive] = useState(false);
@@ -150,6 +151,7 @@ const CreatePatient: React.FC<CreatePatientProps> = ({ close }) => {
         await dispatch(createHqPatient(payload)).unwrap();
         toast.success('Patient created successfully!');
         close();
+        refresh();
       } catch (error) {
         toast.error('Failed to create patient');
       } finally {

@@ -78,7 +78,7 @@ const Topbar = () => {
         <div className='w-[80%] border-b-2 border-secondary-4 p-5 fixed top-0 z-30 bg-white overflow-hidden'>
           <div className='w-full flex items-center justify-between'>
             <div>
-              <h2 className="first-letter:capitalize font-[400] text-[14px] text-[#1E293B]">welcom back,</h2>
+              <h2 className="first-letter:capitalize font-[400] text-[14px] text-[#1E293B]">welcome back,</h2>
               <h2 className="capitalize text-[20px] font-[500] text-[#1E293B]">{user?.name}</h2>
             </div>
             <div className="flex items-center gap-x-[12px]">

@@ -10,40 +10,39 @@ import { useDispatch, useSelector } from "react-redux";
 import { RootState, AppDispatch } from "@/redux/store";
 import { startLoading, stopLoading } from "@/redux/slice/loadingSlice";
 import { useRouter } from "next/navigation";
-import UserDetails from '@/components/branch-partner/user-details/page';
-
-
 
 const Patient = () => {
   const [open, setOpen] = useState(false);
   const [selectedRow, setSelectedRow] = useState<any>(null);
   const router = useRouter();
   const dispatch = useDispatch<AppDispatch>();
-  const allBranchPatient = useSelector((state: RootState) => Array.isArray(state.branchPartnerPatient.allBranchPatient) ? state.branchPartnerPatient.allBranchPatient : []);
+  const allBranchPatient = useSelector((state: RootState) =>
+    Array.isArray(state.branchPartnerPatient.allBranchPatient)
+      ? state.branchPartnerPatient.allBranchPatient
+      : []
+  );
 
-  // fetch partners list
+  // ✅ Move this function outside useEffect
+  const fetchPartners = async () => {
+    try {
+      dispatch(startLoading());
+      await dispatch(getAllBranchPatient()).unwrap();
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      dispatch(stopLoading());
+    }
+  };
+
+  // Fetch patients on component mount
   useEffect(() => {
-    const fetchPartners = async () => {
-      try {
-        dispatch(startLoading());
-        await dispatch(getAllBranchPatient()).unwrap();
-      } catch (error: any) {
-        toast.error(error.message);
-      } finally {
-        dispatch(stopLoading());
-      }
-    };
-
     fetchPartners();
   }, [dispatch]);
-
 
   // Toggle modal
   const handleModal = () => {
     setOpen((prev) => !prev);
   };
-
-
 
   // Navigate to individual patient page
   const handleOpenDetails = (row: any) => {
@@ -56,36 +55,16 @@ const Patient = () => {
     setSelectedRow(null);
   };
 
-  // helper to capitalize first letter 
+  // Helper to capitalize first letter
   const capitalize = (str: string) =>
     str ? str.charAt(0).toUpperCase() + str.slice(1).toLowerCase() : "N/A";
 
   const columns = [
-    {
-      key: "id",
-      label: "ID",
-      render: (row: any) => row.id, // keep as is
-    },
-    {
-      key: "name",
-      label: "Patient Name",
-      render: (row: any) => capitalize(row.name),
-    },
-    {
-      key: "phone",
-      label: "Phone Number",
-      render: (row: any) => row.phone || "N/A",
-    },
-    {
-      key: "email",
-      label: "Email Address",
-      render: (row: any) => row.email?.toLowerCase() || "N/A", // emails stay lowercase
-    },
-    {
-      key: "mobile_app_patient",
-      label: "Mobile App",
-      render: (row: any) => capitalize(row.mobile_app_patient),
-    },
+    { key: "id", label: "ID", render: (row: any) => row.id },
+    { key: "name", label: "Patient Name", render: (row: any) => capitalize(row.name) },
+    { key: "phone", label: "Phone Number", render: (row: any) => row.phone || "N/A" },
+    { key: "email", label: "Email Address", render: (row: any) => row.email?.toLowerCase() || "N/A" },
+    { key: "mobile_app_patient", label: "Mobile App", render: (row: any) => capitalize(row.mobile_app_patient) },
     {
       key: "status",
       label: "Status",
@@ -105,7 +84,6 @@ const Patient = () => {
     },
   ];
 
-
   return (
     <section className="p-4 space-y-4">
       <div className="flex justify-between items-center">
@@ -117,33 +95,20 @@ const Patient = () => {
           Add Patient
         </button>
       </div>
-      <Table 
+
+      <Table
         columns={columns}
         data={allBranchPatient}
-        handleView={(row) => router.push(`/branch/patients/${row.uuid}`)}
+        handleView={(row) => handleOpenDetails(row)}
       />
 
-      {
-        open && (
-          <Modal
-            onClose={handleModal}
-            visible={open}
-          >
-            <CreatePatient
-              close={handleModal}
-            />
-          </Modal>
-        )
-      }
-
-      {/* Modal for User Details */}
-      <Modal visible={open} onClose={handleClose}>
-        {selectedRow && <UserDetails uuid={selectedRow.uuid} close={handleClose}/>}
-      </Modal>
+      {open && (
+        <Modal onClose={handleModal} visible={open}>
+          <CreatePatient close={handleModal} refresh={fetchPartners} />
+        </Modal>
+      )}
     </section>
   );
 };
 
 export default Patient;
-
-
