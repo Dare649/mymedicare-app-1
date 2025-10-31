@@ -14,8 +14,8 @@ interface TableProps {
   data?: any[];
   columns?: Column[];
   itemsPerPage?: number;
-  viewPath?: (id: string | number) => string;
   handleView?: (row: any) => void;
+  showView?: boolean; // ✅ NEW
 }
 
 const Table: React.FC<TableProps> = ({
@@ -23,6 +23,7 @@ const Table: React.FC<TableProps> = ({
   columns = [],
   itemsPerPage = 10,
   handleView,
+  showView = true, // ✅ Default is TRUE (view column shows)
 }) => {
   const [currentPage, setCurrentPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState('');
@@ -48,8 +49,8 @@ const Table: React.FC<TableProps> = ({
 
   return (
     <div className="w-full">
-      {/* Search Input */}
-      <div className="w-full border-b-[1.5px] border-[#CBD5E1] px-4 py-3 flex items-center gap-x-2 text-[#94A3BB]">
+      {/* Search */}
+      <div className="w-full border-b px-4 py-3 flex items-center gap-x-2 text-[#94A3BB]">
         <CiSearch size={18} />
         <input
           type="text"
@@ -61,57 +62,52 @@ const Table: React.FC<TableProps> = ({
       </div>
 
       {/* Table */}
-      <div
-        className="w-full overflow-auto scrollbar-hide"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-        }}
-      >
+      <div className="w-full overflow-auto scrollbar-hide">
         <table className="min-w-full table-auto text-sm">
           <thead className="bg-[#F1F5F9] text-left">
             <tr>
               {columns.map((col) => (
-                <th
-                  key={col.key}
-                  className="py-3 px-6 font-[500] text-[#475569] uppercase whitespace-nowrap"
-                >
+                <th key={col.key} className="py-3 px-6 font-medium text-[#475569] uppercase whitespace-nowrap">
                   {col.label}
                 </th>
               ))}
-              <th className="py-3 px-6 font-[500] text-[#475569] uppercase whitespace-nowrap">
-                Action
-              </th>
+
+              {/* ✅ Only show column if showView is true */}
+              {showView && (
+                <th className="py-3 px-6 font-medium text-[#475569] uppercase whitespace-nowrap">
+                  Action
+                </th>
+              )}
             </tr>
           </thead>
+
           <tbody className="bg-white">
             {currentPageData.length > 0 ? (
               currentPageData.map((item, index) => (
                 <tr key={index} className="border-t hover:bg-[#F9FAFB]">
                   {columns.map((col) => (
-                    <td
-                      key={col.key}
-                      className="py-3 px-6 text-[#334155] font-[400] whitespace-nowrap"
-                    >
+                    <td key={col.key} className="py-3 px-6 text-[#334155] whitespace-nowrap">
                       {item[col.key]}
                     </td>
                   ))}
-                  <td className="py-3 px-6">
-                    <button
-                      className="flex items-center justify-center bg-secondary-4 rounded-md p-2 text-[#0F172A] cursor-pointer gap-x-1"
-                      onClick={() => handleView && handleView(item)}
-                    >
-                      <IoEyeOutline size={14} />
-                      <span className="text-sm">View</span>
-                    </button>
-                  </td>
+
+                  {/* ✅ Only show button if showView is true */}
+                  {showView && (
+                    <td className="py-3 px-6">
+                      <button
+                        className="flex items-center justify-center bg-secondary-4 rounded-md p-2 text-[#0F172A] cursor-pointer gap-x-1"
+                        onClick={() => handleView && handleView(item)}
+                      >
+                        <IoEyeOutline size={14} />
+                        <span className="text-sm">View</span>
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             ) : (
               <tr>
-                <td
-                  colSpan={columns.length + 1}
-                  className="text-center py-6 text-gray-400"
-                >
+                <td colSpan={columns.length + (showView ? 1 : 0)} className="text-center py-6 text-gray-400">
                   No data found
                 </td>
               </tr>

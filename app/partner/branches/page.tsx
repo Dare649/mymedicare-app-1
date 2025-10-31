@@ -36,9 +36,9 @@ const HqBranches = () => {
   }, [dispatch]);
 
   // Navigate to individual patient page
-  const handleOpenDetails = (row: any) => {
-    router.push(`/partner/patients/${row.uuid}`);
-  };
+  // const handleOpenDetails = (row: any) => {
+  //   router.push(`/partner/patients/${row.uuid}`);
+  // };
 
 
   // helper to capitalize first letter
@@ -86,7 +86,7 @@ const HqBranches = () => {
       <Table
         columns={columns}
         data={allHqBranches}
-        handleView={(row) => handleOpenDetails(row)}
+        showView={false}
       />
     </section>
   );
